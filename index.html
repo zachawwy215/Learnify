@@ -256,23 +256,41 @@
     }
 
     async function translateToBM() {
+        if (!lastExtractedText) return;
         lastMode = 'translate';
         const out = document.getElementById('output-container');
-        out.innerHTML = `<span style="color:#e74c3c; font-weight:bold;">🌐 Translating notes to Bahasa Malaysia...</span>`;
+        out.innerHTML = `<span style="color:#e74c3c; font-weight:bold;">🌐 Translating notes... This may take a moment for long files.</span><br><div id="translation-progress" style="font-size:0.9rem; color:#7f8c8d; margin-top:10px;">Starting...</div>`;
+        
+        const progressDiv = document.getElementById('translation-progress');
+        
+        // Chunking the text into 3000 character segments
+        const chunkSize = 3000;
+        const textChunks = [];
+        for (let i = 0; i < lastExtractedText.length; i += chunkSize) {
+            textChunks.push(lastExtractedText.substring(i, i + chunkSize));
+        }
 
-        const prompt = `
-            You are a professional academic translator. Translate the following educational material into formal Bahasa Malaysia. 
-            Maintain the original structure and formatting. If there are highly technical terms with no direct BM equivalent, keep the original term in brackets.
-            
-            Text: "${lastExtractedText.substring(0, 7500)}"
-        `;
+        let fullTranslation = "";
 
         try {
-            const res = await puter.ai.chat(prompt, { model: 'google/gemini-2.0-flash' });
-            out.innerHTML = `<h3>🌐 Terjemahan Nota (BM)</h3><div>${res.message.content}</div>`;
+            for (let i = 0; i < textChunks.length; i++) {
+                progressDiv.innerText = `🔄 Menterjemah bahagian ${i + 1} daripada ${textChunks.length}...`;
+                
+                const prompt = `
+                    You are a professional academic translator. Translate the following section of educational material into formal Bahasa Malaysia. 
+                    Maintain original formatting. If technical terms have no direct BM equivalent, keep the original in brackets.
+                    
+                    Section ${i + 1}: "${textChunks[i]}"
+                `;
+
+                const res = await puter.ai.chat(prompt, { model: 'google/gemini-2.0-flash' });
+                fullTranslation += res.message.content + "\n\n";
+            }
+
+            out.innerHTML = `<h3>🌐 Terjemahan Nota Penuh (BM)</h3><div>${fullTranslation}</div>`;
             document.getElementById('btn-regen').style.display = "inline-block";
         } catch (e) {
-            out.innerHTML = "❌ Translation Error. Please try again.";
+            out.innerHTML = "❌ Translation Error. The file might be too large or the connection timed out.";
         }
     }
 
