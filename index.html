@@ -172,7 +172,7 @@
 </div>
 
 <script>
-    // Stability Fix: Enable polling fallback for WebSockets
+    // Stability Fix: Enable polling fallback for WebSockets[cite: 4]
     puter.js.config({ transport: ['polling', 'websocket'] });
 
     const pdfjsLib = window['pdfjs-dist/build/pdf'];
@@ -219,36 +219,51 @@
     }
 
     async function handleFileSelect() {
-        const file = document.getElementById('fileInput').files[0];
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
         if (!file) return;
+
         document.getElementById('file-label').innerText = "📄 " + file.name;
-        document.getElementById('setup-section').style.display = "block";
-        document.getElementById('start-game-btn').classList.add('enabled');
-        document.getElementById('output-container').innerHTML = "Extracting text...";
+        const out = document.getElementById('output-container');
+        out.innerHTML = "<span style='color:#f39c12; font-weight:bold;'>Reading file... please wait.</span>";
 
         try {
             if (file.type === "application/pdf") {
-                const pdf = await pdfjsLib.getDocument({data: await file.arrayBuffer()}).promise;
+                // ROBUST PDF LOADING[cite: 4]
+                const arrayBuffer = await file.arrayBuffer();
+                const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
+                const pdf = await loadingTask.promise;
+                
                 let text = "";
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
-                    text += (await page.getTextContent()).items.map(item => item.str).join(' ') + " ";
+                    const content = await page.getTextContent();
+                    text += content.items.map(item => item.str).join(' ') + " ";
                 }
                 lastExtractedText = text;
             } else {
+                // OCR FOR IMAGES[cite: 4]
                 lastExtractedText = await puter.ai.img2txt(file);
             }
-            document.getElementById('output-container').innerHTML = "Ready! Adjust settings and click Generate.";
+
+            if (!lastExtractedText || lastExtractedText.trim().length === 0) {
+                throw new Error("No text found in file.");
+            }
+
+            // SUCCESS STATE
+            document.getElementById('setup-section').style.display = "block";
+            document.getElementById('start-game-btn').classList.add('enabled');
+            out.innerHTML = "✅ Ready! Adjust settings and click Generate.";
+            
         } catch (e) {
             console.error("Extraction Error:", e);
-            document.getElementById('output-container').innerHTML = "❌ Error reading file. Try a different PDF or image.";
+            out.innerHTML = "❌ Error reading file. Try a different PDF or image.";
         }
     }
 
     async function runAI() {
-        // Initialization Guard
         if (!puter || !puter.ai) {
-            alert("Connecting to AI... please wait 2 seconds and try again.");
+            alert("Connecting to AI... please wait a few seconds.");
             return;
         }
 
@@ -259,47 +274,58 @@
         const mode = document.getElementById('displayMode').value;
         out.innerHTML = `<span style="color:#3498db; font-weight:bold;">${uiText[currentUILang].processing}</span>`;
 
-        const prompt = `Generate ${qCount} questions from: "${lastExtractedText.substring(0, 7500)}". Format: ${qType}. Always include answers at the end prefixed by "---ANSWERS-START---". Language: ${currentUILang === 'en' ? 'English' : 'Bahasa Malaysia'}.`;
+        // PROMPT SPECIFYING GEMINI 2.0[cite: 4]
+        const prompt = `Generate ${qCount} questions from the following text: "${lastExtractedText.substring(0, 7500)}". 
+        Question Style: ${qType}. 
+        Format Requirements: 
+        1. Always include answers at the very end.
+        2. Prefix the answer section with exactly this string: "---ANSWERS-START---".
+        3. Language: ${currentUILang === 'en' ? 'English' : 'Bahasa Malaysia'}.`;
 
         try {
             const res = await puter.ai.chat(prompt, { model: 'google/gemini-2.0-flash' });
-            const parts = res.message.content.split("---ANSWERS-START---");
-            const header = mode === 'student' ? '📝 Practice Quiz' : '🧑‍🏫 Teacher Material';
+            const responseText = res.message.content;
             
-            let htmlContent = `<h3>${header}</h3><div>${parts[0]}</div>`;
-            if (mode === 'student') {
-                htmlContent += `<details class="answer-box"><summary>Click to reveal answers</summary><div>${parts[1] || 'Answers not found.'}</div></details>`;
+            let htmlContent = "";
+            if (responseText.includes("---ANSWERS-START---")) {
+                const parts = responseText.split("---ANSWERS-START---");
+                const header = mode === 'student' ? '📝 Practice Quiz' : '🧑‍🏫 Teacher Material';
+                
+                htmlContent = `<h3>${header}</h3><div>${parts[0]}</div>`;
+                if (mode === 'student') {
+                    htmlContent += `<details class="answer-box"><summary>Click to reveal answers</summary><div>${parts[1]}</div></details>`;
+                } else {
+                    htmlContent += `<div class="answer-box"><strong>Answer Key:</strong><br>${parts[1]}</div>`;
+                }
             } else {
-                htmlContent += `<div class="answer-box"><strong>Answer Key:</strong><br>${parts[1] || 'Answers not found.'}</div>`;
+                // Fallback if AI forgets the separator
+                htmlContent = `<h3>Content Generated</h3><div>${responseText}</div>`;
             }
             
             out.innerHTML = htmlContent;
             document.getElementById('btn-regen').style.display = "inline-block";
         } catch (e) { 
             console.error("AI Error:", e);
-            out.innerHTML = "❌ AI Connection Error. Try refreshing the page."; 
+            out.innerHTML = "❌ AI Connection Error. Please try again."; 
         }
     }
 
     async function translateToBM() {
         if (!lastExtractedText) return;
-        if (!puter || !puter.ai) {
-            alert("Connecting... please try again in a moment.");
-            return;
-        }
+        if (!puter || !puter.ai) return;
 
         lastAction = 'translate';
         const out = document.getElementById('output-container');
         out.innerHTML = `<span style="color:#e74c3c; font-weight:bold;">🌐 Translating...</span>`;
         
         try {
-            const prompt = `Translate this educational material into formal Bahasa Malaysia. Maintain professional formatting: "${lastExtractedText.substring(0, 4000)}"`;
+            const prompt = `Translate this educational material into formal Bahasa Malaysia. Maintain original professional formatting: "${lastExtractedText.substring(0, 4000)}"`;
             const res = await puter.ai.chat(prompt, { model: 'google/gemini-2.0-flash' });
             out.innerHTML = `<h3>🌐 Terjemahan Nota</h3><div>${res.message.content}</div>`;
             document.getElementById('btn-regen').style.display = "inline-block";
         } catch (e) { 
             console.error("Translation Error:", e);
-            out.innerHTML = "❌ Translation Error. Please try again."; 
+            out.innerHTML = "❌ Translation Error."; 
         }
     }
 
