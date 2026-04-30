@@ -130,11 +130,19 @@
                         <option value="20">20 Questions</option>
                     </select>
                 </div>
+                <!-- Added Mode Selection[cite: 5] -->
+                <div>
+                    <label id="lbl-mode" style="font-weight:bold; font-size:0.8rem; display:block;">DISPLAY MODE:</label>
+                    <select id="displayMode" style="padding:8px; border-radius:5px; border:1px solid #ccc;">
+                        <option value="student">🎒 Student (Hide Ans)</option>
+                        <option value="teacher">🧑‍🏫 Teacher (Show Ans)</option>
+                    </select>
+                </div>
             </div>
             
             <div style="display: flex; justify-content: center; gap: 5px;">
-                <button id="btn-student" class="btn" style="background:#3498db; color:white;" onclick="runAI('student')">🎒 Student Mode</button>
-                <button id="btn-teacher" class="btn" style="background:#2ecc71; color:white;" onclick="runAI('teacher')">🧑‍🏫 Teacher Mode</button>
+                <!-- Combined Button[cite: 5] -->
+                <button id="btn-generate" class="btn" style="background:#3498db; color:white;" onclick="runAI()">✨ Generate Questions</button>
                 <button id="btn-translate" class="btn" style="background:#e74c3c; color:white;" onclick="translateToBM()">🌐 Translate to BM</button>
                 <button id="btn-regen" class="btn" style="background:#f39c12; color:white; display:none;" onclick="handleRegen()">🔄 Regenerate</button>
             </div>
@@ -172,7 +180,7 @@
 
     let currentUILang = 'en';
     let lastExtractedText = "";
-    let lastMode = 'student';
+    let lastAction = 'generate'; 
     let winStreak = 0;
     let currentWord = "";
     let gameActive = false;
@@ -180,14 +188,14 @@
     const uiText = {
         en: { 
             title: "Learnify", upload: "Upload PDF or image", initial: "Upload a file to begin...",
-            student: "🎒 Student Mode", teacher: "🧑‍🏫 Teacher Mode", translate: "🌐 Translate to BM",
-            processing: "✨ Analyzing and Formatting...", type: "QUESTION TYPE:", count: "AMOUNT:",
+            generate: "✨ Generate Questions", translate: "🌐 Translate to BM",
+            processing: "✨ Analyzing and Formatting...", type: "QUESTION TYPE:", count: "AMOUNT:", mode: "DISPLAY MODE:",
             disclaimer: "Disclaimer: AI may occasionally provide incorrect information. Please cross-reference with your original source."
         },
         ms: { 
             title: "Learnify", upload: "Muat Naik PDF atau Imej", initial: "Muat naik fail untuk bermula...",
-            student: "🎒 Mod Pelajar", teacher: "🧑‍🏫 Mod Guru", translate: "🌐 Terjemah ke BM",
-            processing: "✨ Menganalisis dan Menyusun...", type: "JENIS SOALAN:", count: "JUMLAH:",
+            generate: "✨ Jana Soalan", translate: "🌐 Terjemah ke BM",
+            processing: "✨ Menganalisis dan Menyusun...", type: "JENIS SOALAN:", count: "JUMLAH:", mode: "MOD PAPARAN:",
             disclaimer: "Penafian: AI mungkin memberikan maklumat yang salah. Sila rujuk semula sumber asal anda."
         }
     };
@@ -197,11 +205,11 @@
         const t = uiText[currentUILang];
         document.getElementById('main-title').innerText = t.title;
         document.getElementById('file-label').innerText = t.upload;
-        document.getElementById('btn-student').innerText = t.student;
-        document.getElementById('btn-teacher').innerText = t.teacher;
+        document.getElementById('btn-generate').innerText = t.generate;
         document.getElementById('btn-translate').innerText = t.translate;
         document.getElementById('lbl-type').innerText = t.type;
         document.getElementById('lbl-count').innerText = t.count;
+        document.getElementById('lbl-mode').innerText = t.mode;
         document.getElementById('disclaimer-text').innerText = t.disclaimer;
         document.getElementById('uiLangBtn').innerText = currentUILang === 'en' ? "Bahasa Malaysia" : "English";
     }
@@ -228,20 +236,20 @@
             } else {
                 lastExtractedText = await puter.ai.img2txt(file);
             }
-            out.innerHTML = "✅ Ready! Click a mode to begin.[cite: 4]";
+            out.innerHTML = "✅ Ready! Adjust settings and click Generate.[cite: 4]";
         } catch (e) {
             out.innerHTML = "❌ Error reading file.[cite: 4]";
         }
     }
 
-    async function runAI(mode) {
-        lastMode = mode;
+    async function runAI() {
+        lastAction = 'generate';
         const out = document.getElementById('output-container');
         const qType = document.getElementById('qType').value;
         const qCount = document.getElementById('qCount').value;
+        const mode = document.getElementById('displayMode').value; // Get selected mode[cite: 5]
         out.innerHTML = `<span style="color:#3498db; font-weight:bold;">${uiText[currentUILang].processing}</span>`;
 
-        // Restored prompt logic from Backup[cite: 4]
         const prompt = `
             You are a professional examiner. Based on this text: "${lastExtractedText.substring(0, 7500)}"
             Generate ${qCount} questions. Type: ${qType}.
@@ -269,7 +277,7 @@
     // Restored Chunked Translation from Backup[cite: 4]
     async function translateToBM() {
         if (!lastExtractedText) return;
-        lastMode = 'translate';
+        lastAction = 'translate';
         const out = document.getElementById('output-container');
         out.innerHTML = `<span style="color:#e74c3c; font-weight:bold;">🌐 Translating...[cite: 4]</span><br><div id="t-prog" style="font-size:0.8rem; margin-top:5px;"></div>`;
         
@@ -291,7 +299,7 @@
         } catch (e) { out.innerHTML = "❌ Translation Error.[cite: 4]"; }
     }
 
-    function handleRegen() { lastMode === 'translate' ? translateToBM() : runAI(lastMode); }
+    function handleRegen() { lastAction === 'translate' ? translateToBM() : runAI(); }
 
     function toggleGame() {
         if(!lastExtractedText) { alert("Upload a file first![cite: 4]"); return; }
