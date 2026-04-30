@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Learnify - AI Study Assistant</title>
     
+    <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://js.puter.com/v2/"></script>
 
@@ -173,8 +174,8 @@
 <script>
     puter.js.config({ transport: ['polling', 'websocket'] });
 
-    const pdfjsLib = window['pdfjs-dist/build/pdf'];
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    // FIX: Using var to avoid lexical initialization errors[cite: 2]
+    var pdfjsLib = window['pdfjs-dist/build/pdf'];
 
     let currentUILang = 'en';
     let lastExtractedText = "";
@@ -217,6 +218,10 @@
     }
 
     async function handleFileSelect() {
+        // FIX: Re-initialize and set worker source inside the event handler[cite: 2]
+        if (!pdfjsLib) pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
         const fileInput = document.getElementById('fileInput');
         const file = fileInput.files[0];
         if (!file) return;
@@ -239,7 +244,7 @@
                 }
                 lastExtractedText = text;
             } else if (file.type.startsWith('image/')) {
-                lastExtractedText = await puter.ai.img2txt(file);
+                lastExtractedText = await puter.ai.img2txt(file);[cite: 2]
             } else {
                 throw new Error("Unsupported file type.");
             }
@@ -268,7 +273,8 @@
         const mode = document.getElementById('displayMode').value;
         out.innerHTML = `<span style="color:#3498db; font-weight:bold;">${uiText[currentUILang].processing}</span>`;
 
-        const contextText = lastExtractedText.substring(0, 7000);
+        // FIX: Truncate context to prevent AI timeout[cite: 2]
+        const contextText = lastExtractedText.substring(0, 7000); 
         const prompt = `Act as a teacher. Based on this text: "${contextText}", generate ${qCount} ${qType} questions. 
         Language: ${currentUILang === 'en' ? 'English' : 'Bahasa Malaysia'}. 
         Format: List all questions first. After all questions are listed, add the exact tag ---ANSWERS-START--- followed by the answer key.[cite: 2]`;
@@ -310,7 +316,7 @@
         out.innerHTML = `<span style="color:#e74c3c; font-weight:bold;">🌐 Translating content...[cite: 2]</span>`;
         
         try {
-            const textToTranslate = lastExtractedText.substring(0, 5000); // Optimized length
+            const textToTranslate = lastExtractedText.substring(0, 5000); 
             const prompt = `Translate the following educational content into formal Bahasa Malaysia. 
             Keep technical terms in English inside brackets, e.g., "Motherboard [Papan Induk]". 
             Content: "${textToTranslate}"`;
