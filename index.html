@@ -172,6 +172,9 @@
 </div>
 
 <script>
+    // Stability Fix: Enable polling fallback for WebSockets
+    puter.js.config({ transport: ['polling', 'websocket'] });
+
     const pdfjsLib = window['pdfjs-dist/build/pdf'];
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -223,21 +226,32 @@
         document.getElementById('start-game-btn').classList.add('enabled');
         document.getElementById('output-container').innerHTML = "Extracting text...";
 
-        if (file.type === "application/pdf") {
-            const pdf = await pdfjsLib.getDocument({data: await file.arrayBuffer()}).promise;
-            let text = "";
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                text += (await page.getTextContent()).items.map(item => item.str).join(' ') + " ";
+        try {
+            if (file.type === "application/pdf") {
+                const pdf = await pdfjsLib.getDocument({data: await file.arrayBuffer()}).promise;
+                let text = "";
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    text += (await page.getTextContent()).items.map(item => item.str).join(' ') + " ";
+                }
+                lastExtractedText = text;
+            } else {
+                lastExtractedText = await puter.ai.img2txt(file);
             }
-            lastExtractedText = text;
-        } else {
-            lastExtractedText = await puter.ai.img2txt(file);
+            document.getElementById('output-container').innerHTML = "Ready! Adjust settings and click Generate.";
+        } catch (e) {
+            console.error("Extraction Error:", e);
+            document.getElementById('output-container').innerHTML = "❌ Error reading file. Try a different PDF or image.";
         }
-        document.getElementById('output-container').innerHTML = "Ready! Adjust settings and click Generate.";
     }
 
     async function runAI() {
+        // Initialization Guard
+        if (!puter || !puter.ai) {
+            alert("Connecting to AI... please wait 2 seconds and try again.");
+            return;
+        }
+
         lastAction = 'generate';
         const out = document.getElementById('output-container');
         const qType = document.getElementById('qType').value;
@@ -261,11 +275,19 @@
             
             out.innerHTML = htmlContent;
             document.getElementById('btn-regen').style.display = "inline-block";
-        } catch (e) { out.innerHTML = "❌ AI Error. Please try again."; }
+        } catch (e) { 
+            console.error("AI Error:", e);
+            out.innerHTML = "❌ AI Connection Error. Try refreshing the page."; 
+        }
     }
 
     async function translateToBM() {
         if (!lastExtractedText) return;
+        if (!puter || !puter.ai) {
+            alert("Connecting... please try again in a moment.");
+            return;
+        }
+
         lastAction = 'translate';
         const out = document.getElementById('output-container');
         out.innerHTML = `<span style="color:#e74c3c; font-weight:bold;">🌐 Translating...</span>`;
@@ -275,7 +297,10 @@
             const res = await puter.ai.chat(prompt, { model: 'google/gemini-2.0-flash' });
             out.innerHTML = `<h3>🌐 Terjemahan Nota</h3><div>${res.message.content}</div>`;
             document.getElementById('btn-regen').style.display = "inline-block";
-        } catch (e) { out.innerHTML = "❌ Translation Error."; }
+        } catch (e) { 
+            console.error("Translation Error:", e);
+            out.innerHTML = "❌ Translation Error. Please try again."; 
+        }
     }
 
     function handleRegen() { lastAction === 'translate' ? translateToBM() : runAI(); }
