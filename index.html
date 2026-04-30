@@ -90,11 +90,11 @@
     <div class="instruction-box">
         <h2 id="inst-title">Quick Guide</h2>
         <ul id="inst-list" style="list-style: none; padding: 0;">
-            <li>• 1. Upload: Select PDF/photo.[cite: 1]</li>
-            <li>• 2. Setup: Choose type, amount, & mode.[cite: 1]</li>
-            <li>• 3. Student Mode: Hides answers.[cite: 1]</li>
-            <li>• 4. Teacher Mode: Shows answers.[cite: 1]</li>
-            <li>• 5. Translate: Rewrite to BM.[cite: 1]</li>
+            <li>• 1. Upload: Select PDF/photo.</li>
+            <li>• 2. Setup: Choose type, amount, & mode.</li>
+            <li>• 3. Student Mode: Hides answers.</li>
+            <li>• 4. Teacher Mode: Shows answers.</li>
+            <li>• 5. Translate: Rewrite to BM.</li>
         </ul>
     </div>
 
@@ -109,7 +109,7 @@
     </div>
 
     <div id="disclaimer-text" class="disclaimer-bar">
-        Disclaimer: AI may occasionally provide incorrect information. Please cross-reference with your original source.[cite: 1]
+        Disclaimer: AI may occasionally provide incorrect information. Please cross-reference with your original source.
     </div>
 
     <div class="app-container">
@@ -130,6 +130,7 @@
                         <option value="20">20 Questions</option>
                     </select>
                 </div>
+                <!-- Added Mode Selection[cite: 5] -->
                 <div>
                     <label id="lbl-mode" style="font-weight:bold; font-size:0.8rem; display:block;">DISPLAY MODE:</label>
                     <select id="displayMode" style="padding:8px; border-radius:5px; border:1px solid #ccc;">
@@ -140,6 +141,7 @@
             </div>
             
             <div style="display: flex; justify-content: center; gap: 5px;">
+                <!-- Combined Button -->
                 <button id="btn-generate" class="btn" style="background:#3498db; color:white;" onclick="runAI()">✨ Generate Questions</button>
                 <button id="btn-translate" class="btn" style="background:#e74c3c; color:white;" onclick="translateToBM()">🌐 Translate to BM</button>
                 <button id="btn-regen" class="btn" style="background:#f39c12; color:white; display:none;" onclick="handleRegen()">🔄 Regenerate</button>
@@ -172,6 +174,7 @@
 </div>
 
 <script>
+    // Proven Library Setup from Backup[cite: 4]
     const pdfjsLib = window['pdfjs-dist/build/pdf'];
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -187,13 +190,13 @@
             title: "Learnify", upload: "Upload PDF or image", initial: "Upload a file to begin...",
             generate: "✨ Generate Questions", translate: "🌐 Translate to BM",
             processing: "✨ Analyzing and Formatting...", type: "QUESTION TYPE:", count: "AMOUNT:", mode: "DISPLAY MODE:",
-            disclaimer: "Disclaimer: AI may occasionally provide incorrect information. Please cross-reference with your original source."[cite: 1]
+            disclaimer: "Disclaimer: AI may occasionally provide incorrect information. Please cross-reference with your original source."
         },
         ms: { 
             title: "Learnify", upload: "Muat Naik PDF atau Imej", initial: "Muat naik fail untuk bermula...",
             generate: "✨ Jana Soalan", translate: "🌐 Terjemah ke BM",
             processing: "✨ Menganalisis dan Menyusun...", type: "JENIS SOALAN:", count: "JUMLAH:", mode: "MOD PAPARAN:",
-            disclaimer: "Penafian: AI mungkin memberikan maklumat yang salah. Sila rujuk semula sumber asal anda."[cite: 1]
+            disclaimer: "Penafian: AI mungkin memberikan maklumat yang salah. Sila rujuk semula sumber asal anda."
         }
     };
 
@@ -211,6 +214,7 @@
         document.getElementById('uiLangBtn').innerText = currentUILang === 'en' ? "Bahasa Malaysia" : "English";
     }
 
+    // Extraction Logic from Backup[cite: 4]
     async function handleFileSelect() {
         const file = document.getElementById('fileInput').files[0];
         if (!file) return;
@@ -230,7 +234,7 @@
                 }
                 lastExtractedText = text;
             } else {
-                lastExtractedText = await puter.ai.img2txt(file);[cite: 1]
+                lastExtractedText = await puter.ai.img2txt(file);
             }
             out.innerHTML = "✅ Ready! Adjust settings and click Generate.";
         } catch (e) {
@@ -243,7 +247,7 @@
         const out = document.getElementById('output-container');
         const qType = document.getElementById('qType').value;
         const qCount = document.getElementById('qCount').value;
-        const mode = document.getElementById('displayMode').value;
+        const mode = document.getElementById('displayMode').value; // Get selected mode
         out.innerHTML = `<span style="color:#3498db; font-weight:bold;">${uiText[currentUILang].processing}</span>`;
 
         const prompt = `
@@ -255,7 +259,7 @@
         `;
 
         try {
-            const res = await puter.ai.chat(prompt, { model: 'google/gemini-2.0-flash' });[cite: 1]
+            const res = await puter.ai.chat(prompt, { model: 'google/gemini-2.0-flash' });
             const parts = res.message.content.split("---ANSWERS-START---");
             const qContent = parts[0].trim();
             const aContent = parts[1] ? parts[1].trim() : "Key unavailable.";
@@ -267,12 +271,10 @@
                 out.innerHTML = `<h3>🧑‍🏫 Teacher Material</h3><div>${qContent}</div><div class="answer-box"><strong>Answer Key:</strong><br>${aContent}</div>`;
             }
             document.getElementById('btn-regen').style.display = "inline-block";
-        } catch (e) { 
-            console.error("AI Generation Error:", e);
-            out.innerHTML = "❌ AI Error."; 
-        }
+        } catch (e) { out.innerHTML = "❌ AI Error."; }
     }
 
+    // Restored Chunked Translation from Backup[cite: 4]
     async function translateToBM() {
         if (!lastExtractedText) return;
         lastAction = 'translate';
@@ -289,15 +291,12 @@
             for (let i = 0; i < chunks.length; i++) {
                 prog.innerText = `Part ${i+1}/${chunks.length}...`;
                 const prompt = `Translate this educational section to formal Bahasa Malaysia. Maintain formatting. technical terms keep original in brackets: "${chunks[i]}"`;
-                const res = await puter.ai.chat(prompt, { model: 'google/gemini-2.0-flash' });[cite: 1]
+                const res = await puter.ai.chat(prompt, { model: 'google/gemini-2.0-flash' });
                 translated += res.message.content + "\n\n";
             }
             out.innerHTML = `<h3>🌐 Terjemahan Nota</h3><div>${translated}</div>`;
             document.getElementById('btn-regen').style.display = "inline-block";
-        } catch (e) { 
-            console.error("Translation Error Details:", e);
-            out.innerHTML = "❌ Translation Error."; 
-        }
+        } catch (e) { out.innerHTML = "❌ Translation Error."; }
     }
 
     function handleRegen() { lastAction === 'translate' ? translateToBM() : runAI(); }
@@ -330,7 +329,7 @@
     }
 
     function showHint() { document.getElementById('hint-text').innerText = `Starts with "${currentWord[0]}" and ends with "${currentWord[currentWord.length - 1]}"`; }
-    function giveUp() { document.getElementById('game-feedback').innerText = `Answer: ${currentWord}`; setTimeout(refreshGame, 2000); }
+    function giveUp() { document.getElementById('game-feedback').innerText = `Answer: ${currentWord}[cite: 4]`; setTimeout(refreshGame, 2000); }
 </script>
 </body>
 </html>
