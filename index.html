@@ -5,367 +5,184 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Learnify - AI Study Assistant</title>
     
-    <!-- External Libraries -->
+    <!-- Stable Library Loading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://js.puter.com/v2/"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Coming+Soon&family=Handlee&display=swap');
-
+        /* Merged Professional Aesthetic */
         body {
-            margin: 0; padding: 0;
-            font-family: 'Handlee', cursive;
-            background: #ffffff;
-            background-image: 
-                radial-gradient(circle at 0% 100%, #d1e3fa 0%, #d1e3fa 25%, transparent 25%),
-                radial-gradient(circle at 100% 100%, #f7d6e0 0%, #f7d6e0 25%, transparent 25%);
-            background-size: 100% 100%;
-            min-height: 100vh;
-            display: flex; flex-direction: column;
-            overflow-x: hidden;
+            margin: 0; padding: 20px 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f7f6;
+            background-image: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
         }
 
-        body::before, body::after {
-            content: ""; position: fixed; width: 150px; height: 150px; z-index: -1; opacity: 0.7;
+        .main-wrapper {
+            display: flex; flex-direction: row; gap: 20px;
+            max-width: 1200px; width: 95%; align-items: flex-start;
+            justify-content: center; margin-bottom: 60px;
         }
-        body::before { top: 10px; left: 10px; border-left: 2px solid #000; border-top: 2px solid #000; border-radius: 20px 0 0 0; }
-        body::after { bottom: 10px; right: 10px; border-right: 2px solid #000; border-bottom: 2px solid #000; border-radius: 0 0 20px 0; }
 
-        .main-content { display: flex; flex-direction: column; align-items: center; padding-top: 40px; position: relative; z-index: 1; }
-
-        .lang-node { position: absolute; top: 20px; right: 40px; }
+        .container {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 30px; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            flex: 2; text-align: center; position: relative;
+        }
 
         .instruction-box {
-            position: absolute; top: 80px; left: 40px; background: #f0c9c9;
-            padding: 15px; border-radius: 30px; width: 220px;
-            box-shadow: 2px 4px 10px rgba(0,0,0,0.1); font-size: 0.85rem; line-height: 1.3;
-        }
-        .instruction-box h2 { font-family: 'Coming Soon', cursive; font-size: 1rem; text-align: center; margin-top: 0; }
-
-        .logo-container { text-align: center; margin-bottom: 20px; }
-        .logo-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; }
-
-        h1 { font-family: 'Coming Soon', cursive; color: #2980b9; font-size: 3rem; margin: 5px 0; }
-
-        .upload-area {
-            background: #e0e0e0; padding: 15px 50px; border-radius: 50px;
-            font-size: 2rem; cursor: pointer; margin: 20px 0; border: none;
-            font-family: 'Coming Soon', cursive; transition: 0.2s;
+            background: white; padding: 20px; border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            flex: 1; min-width: 280px; text-align: left; border-left: 5px solid #3498db;
         }
 
-        .disclaimer-bar { background: #fff9c4; padding: 10px 20px; font-size: 0.9rem; margin: 10px 0; border-radius: 5px; max-width: 600px; text-align: center; }
-
-        .app-container { width: 80%; max-width: 800px; margin-top: 20px; background: rgba(255,255,255,0.8); padding: 20px; border-radius: 20px; }
-
-        .btn { padding: 10px 22px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: 'Handlee'; transition: all 0.3s ease; }
-        #uiLangBtn { background: #1a73e8; color: white; border-radius: 10px; }
+        .lang-node { position: absolute; top: 15px; right: 20px; }
+        img.logo { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 10px; border: 3px solid #3498db; }
+        h1 { color: #2c3e50; margin: 5px 0; font-size: 2.2rem; }
+        
+        .section { margin: 15px 0; padding: 10px; }
+        .control-row { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 12px; }
+        
+        .btn { padding: 12px 20px; margin: 5px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-translate { background: #e74c3c; color: white; }
         
         #output-container { 
-            text-align: left; background: #ffffff; padding: 25px; border-radius: 12px; 
-            border: 1px solid #dee2e6; max-height: 450px; overflow-y: auto; margin-top: 20px;
-            line-height: 1.6; color: #2c3e50; white-space: pre-wrap;
+            text-align: left; background: #fff; padding: 25px; border-radius: 12px; 
+            border: 1px solid #eee; max-height: 500px; overflow-y: auto; 
+            line-height: 1.6; white-space: pre-wrap;
         }
-        #output-container h3 { color: #2980b9; border-bottom: 2px solid #3498db; padding-bottom: 5px; margin-bottom: 15px; }
-        .answer-box { background: #f1f8ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db; margin-top: 15px; }
 
-        .footer-credit-bar { width: 100%; padding: 20px 0; text-align: center; margin-top: auto; font-weight: bold; }
-
-        #game-section { margin-top: 30px; padding: 20px; background: #fffcf0; border-radius: 15px; border: 1px solid #f1c40f; text-align: center; }
-        .play-game-btn { background: #e67e22; color: white; width: 100%; opacity: 0.4; }
-        .play-game-btn.enabled { opacity: 1; cursor: pointer; }
-
-        @media (max-width: 1000px) {
-            .instruction-box { position: static; width: 90%; margin-bottom: 20px; }
-            .lang-node { top: 10px; right: 10px; }
-        }
+        .footer-credit-bar { width: 100%; padding: 20px 0; text-align: center; margin-top: auto; font-weight: bold; color: #2c3e50; }
+        
+        #game-section { margin-top: 30px; padding: 20px; background: #fffcf0; border-radius: 15px; border: 1px solid #f1c40f; }
     </style>
 </head>
 <body>
 
-<div class="main-content">
-    <div class="lang-node">
-        <button id="uiLangBtn" onclick="toggleUILanguage()">Bahasa Malaysia</button>
+<div class="main-wrapper">
+    <div class="container">
+        <div class="lang-node">
+            <button class="btn" style="background:#9b59b6; color:white; font-size:0.75rem;" id="uiLangBtn" onclick="toggleUILanguage()">Bahasa Malaysia</button>
+        </div>
+
+        <img src="logo_learnify.png" alt="Logo" class="logo">
+        <h1 id="main-title">Learnify</h1>
+
+        <div class="section">
+            <div onclick="document.getElementById('fileInput').click()" style="border: 2px dashed #3498db; padding: 20px; border-radius: 12px; cursor: pointer; background: #fff;">
+                <span id="file-label" style="font-weight:bold; color:#3498db;">📁 Upload PDF or Image[cite: 4]</span>
+                <input type="file" id="fileInput" accept=".pdf,image/*" style="display:none" onchange="handleFileSelect()">
+            </div>
+        </div>
+
+        <div id="setup-section" style="display:none;">
+            <div class="control-row">
+                <select id="qType" style="padding:10px; border-radius:5px;">
+                    <option value="Objective Only">Objective Only[cite: 4]</option>
+                    <option value="Subjective Only">Subjective Only[cite: 4]</option>
+                </select>
+                <select id="qCount" style="padding:10px; border-radius:5px;">
+                    <option value="5">5 Questions[cite: 4]</option>
+                    <option value="10">10 Questions[cite: 4]</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary" onclick="runAI('student')">🎒 Student Mode[cite: 4]</button>
+            <button class="btn btn-primary" style="background:#2ecc71" onclick="runAI('teacher')">🧑‍🏫 Teacher Mode[cite: 4]</button>
+            <button class="btn btn-translate" onclick="translateToBM()">🌐 Translate to BM[cite: 4]</button>
+        </div>
+
+        <div id="output-container">Waiting for upload...[cite: 4]</div>
     </div>
 
     <div class="instruction-box">
-        <h2 id="inst-title">Quick Guide</h2>
-        <ul id="inst-list" style="list-style: none; padding: 0;">
-            <li>• 1. Upload: Select PDF/photo.[cite: 2]</li>
-            <li>• 2. Setup: Choose type, amount, & mode.[cite: 2]</li>
-            <li>• 3. Student Mode: Hides answers.[cite: 2]</li>
-            <li>• 4. Teacher Mode: Shows answers.[cite: 2]</li>
-            <li>• 5. Translate: Rewrite to BM.[cite: 2]</li>
+        <h2 id="inst-title">Quick Guide[cite: 4]</h2>
+        <ul id="inst-list">
+            <li>1. Upload PDF/Image[cite: 4]</li>
+            <li>2. Choose Question Mode[cite: 4]</li>
+            <li>3. Translate notes to BM[cite: 4]</li>
         </ul>
-    </div>
-
-    <div class="logo-container">
-        <img src="logo_learnify.png" alt="Learnify Logo" class="logo-img">
-        <h1 id="main-title">Learnify</h1>
-    </div>
-
-    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-        <span id="file-label">Upload PDF or image</span>
-        <input type="file" id="fileInput" accept=".pdf,image/*" style="display:none" onchange="handleFileSelect()">
-    </div>
-
-    <div id="disclaimer-text" class="disclaimer-bar">
-        Disclaimer: AI may occasionally provide incorrect information. Please cross-reference with your original source.[cite: 2]
-    </div>
-
-    <div class="app-container">
-        <div id="setup-section" style="display:none; text-align:center;">
-            <div style="margin-bottom: 15px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">
-                <div>
-                    <label id="lbl-type" style="font-weight:bold; font-size:0.8rem; display:block;">QUESTION TYPE:</label>
-                    <select id="qType" style="padding:8px; border-radius:5px; border:1px solid #ccc;">
-                        <option value="Objective Only (Multiple Choice)">Objective Only</option>
-                        <option value="Subjective Only (Short Answer)">Subjective Only</option>
-                    </select>
-                </div>
-                <div>
-                    <label id="lbl-count" style="font-weight:bold; font-size:0.8rem; display:block;">AMOUNT:</label>
-                    <select id="qCount" style="padding:8px; border-radius:5px; border:1px solid #ccc;">
-                        <option value="5">5 Questions</option>
-                        <option value="10">10 Questions</option>
-                        <option value="20">20 Questions</option>
-                    </select>
-                </div>
-                <div>
-                    <label id="lbl-mode" style="font-weight:bold; font-size:0.8rem; display:block;">DISPLAY MODE:</label>
-                    <select id="displayMode" style="padding:8px; border-radius:5px; border:1px solid #ccc;">
-                        <option value="student">🎒 Student (Hide Answers)</option>
-                        <option value="teacher">🧑‍🏫 Teacher (Show Answers)</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div style="display: flex; justify-content: center; gap: 5px;">
-                <button id="btn-generate" class="btn" style="background:#3498db; color:white;" onclick="runAI()">✨ Generate Questions</button>
-                <button id="btn-translate" class="btn" style="background:#e74c3c; color:white;" onclick="translateToBM()">🌐 Translate Content</button>
-                <button id="btn-regen" class="btn" style="background:#f39c12; color:white; display:none;" onclick="handleRegen()">🔄 Regenerate</button>
-            </div>
-        </div>
-
-        <div id="output-container">Waiting for document upload...[cite: 2]</div>
-
-        <div id="game-section">
-            <div style="font-weight:bold; color:#d35400; margin-bottom:10px;">🧩 Terminology Scramble | Streak: <span id="streak-count">0</span></div>
-            <button id="start-game-btn" class="btn play-game-btn" onclick="toggleGame()">Start Word Scramble</button>
-            
-            <div id="game-content" style="display:none; margin-top:15px;">
-                <div id="scrambled-display" style="font-size:1.8rem; font-weight:bold; color:#e74c3c; letter-spacing:4px; margin:10px 0;"></div>
-                <div id="hint-text" style="font-size:0.9rem; color:#7f8c8d; font-style:italic; margin-bottom:10px; min-height:1.2rem;"></div>
-                <input type="text" id="game-input" style="padding:10px; width:70%; border-radius:5px; border:1px solid #ccc; margin-bottom:10px;" placeholder="Type answer...">
-                <div>
-                    <button class="btn" style="background:#e67e22; color:white;" onclick="checkScramble()">Submit</button>
-                    <button class="btn" style="background:#9b59b6; color:white; font-size:0.8rem;" onclick="showHint()">Hint</button>
-                    <button class="btn" style="background:#95a5a6; color:white; font-size:0.8rem;" onclick="giveUp()">Give Up</button>
-                </div>
-                <p id="game-feedback" style="font-weight:bold; margin-top:10px; min-height:20px;"></p>
-            </div>
-        </div>
     </div>
 </div>
 
 <div class="footer-credit-bar">
-    Neo Dominion (Computer System Operation, Sarawak Skills 2026)
+    Neo Dominion (Computer System Operation, Sarawak Skills 2026)[cite: 4]
 </div>
 
 <script>
-    puter.js.config({ transport: ['polling', 'websocket'] });
-
-    // FIX: Using var to avoid lexical initialization errors[cite: 2]
+    // FIX: Reverting to stable initialization[cite: 2]
     var pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    let currentUILang = 'en';
     let lastExtractedText = "";
-    let lastAction = 'generate';
-    let winStreak = 0;
-    let currentWord = "";
-    let gameActive = false;
-
-    const uiText = {
-        en: { 
-            title: "Learnify", upload: "Upload PDF or image", instTitle: "Quick Guide",
-            instList: ["• 1. Upload: Select PDF/photo.", "• 2. Setup: Choose type, amount, & mode.", "• 3. Student Mode: Hides answers.", "• 4. Teacher Mode: Shows answers.", "• 5. Translate: Rewrite to BM."],
-            generate: "✨ Generate Questions", translate: "🌐 Translate Content",
-            disclaimer: "Disclaimer: AI may occasionally provide incorrect information. Please cross-reference with your original source.",
-            processing: "✨ Analyzing and Formatting...", type: "QUESTION TYPE:", count: "AMOUNT:", mode: "DISPLAY MODE:", langBtn: "Bahasa Malaysia"
-        },
-        ms: { 
-            title: "Learnify", upload: "Muat Naik PDF atau Imej", instTitle: "Panduan Ringkas",
-            instList: ["• 1. Muat Naik: Pilih PDF/foto.", "• 2. Tetapan: Pilih jenis, jumlah, & mod.", "• 3. Mod Pelajar: Sorok jawapan.", "• 4. Mod Guru: Papar jawapan.", "• 5. Terjemah: Tulis semula ke BM."],
-            generate: "✨ Jana Soalan", translate: "🌐 Terjemah Kandungan",
-            disclaimer: "Penafian: AI mungkin memberikan maklumat yang salah. Sila rujuk semula sumber asal anda.",
-            processing: "✨ Menganalisis dan Menyusun...", type: "JENIS SOALAN:", count: "JUMLAH:", mode: "MOD PAPARAN:", langBtn: "English"
-        }
-    };
-
-    function toggleUILanguage() {
-        currentUILang = currentUILang === 'en' ? 'ms' : 'en';
-        const t = uiText[currentUILang];
-        document.getElementById('main-title').innerText = t.title;
-        document.getElementById('file-label').innerText = t.upload;
-        document.getElementById('inst-title').innerText = t.instTitle;
-        document.getElementById('disclaimer-text').innerText = t.disclaimer;
-        document.getElementById('btn-generate').innerText = t.generate;
-        document.getElementById('btn-translate').innerText = t.translate;
-        document.getElementById('lbl-type').innerText = t.type;
-        document.getElementById('lbl-count').innerText = t.count;
-        document.getElementById('lbl-mode').innerText = t.mode;
-        document.getElementById('uiLangBtn').innerText = t.langBtn;
-        document.getElementById('inst-list').innerHTML = t.instList.map(item => `<li>${item}</li>`).join('');
-    }
+    let currentUILang = 'en';
 
     async function handleFileSelect() {
-        // FIX: Re-initialize and set worker source inside the event handler[cite: 2]
-        if (!pdfjsLib) pdfjsLib = window['pdfjs-dist/build/pdf'];
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-        const fileInput = document.getElementById('fileInput');
-        const file = fileInput.files[0];
+        const file = document.getElementById('fileInput').files[0];
         if (!file) return;
-
+        
         document.getElementById('file-label').innerText = "📄 " + file.name;
-        const out = document.getElementById('output-container');
-        out.innerHTML = "Reading file... please wait.[cite: 2]";
+        document.getElementById('output-container').innerHTML = "Extracting content...[cite: 2]";
 
         try {
             if (file.type === "application/pdf") {
-                const arrayBuffer = await file.arrayBuffer();
-                const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
-                const pdf = await loadingTask.promise;
-                
+                const pdf = await pdfjsLib.getDocument({data: await file.arrayBuffer()}).promise;
                 let text = "";
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
-                    const content = await page.getTextContent();
-                    text += content.items.map(item => item.str).join(' ') + " ";
+                    text += (await page.getTextContent()).items.map(item => item.str).join(' ') + " ";
                 }
                 lastExtractedText = text;
-            } else if (file.type.startsWith('image/')) {
-                lastExtractedText = await puter.ai.img2txt(file);[cite: 2]
             } else {
-                throw new Error("Unsupported file type.");
+                lastExtractedText = await puter.ai.img2txt(file);[cite: 2]
             }
-
-            if (!lastExtractedText || lastExtractedText.trim().length === 0) {
-                throw new Error("No readable text found.[cite: 2]");
-            }
-
             document.getElementById('setup-section').style.display = "block";
-            document.getElementById('start-game-btn').classList.add('enabled');
-            out.innerHTML = "✅ Ready! Adjust settings and click Generate.[cite: 2]";
-            
+            document.getElementById('output-container').innerHTML = "Ready! Choose a mode below.[cite: 4]";
         } catch (e) {
-            console.error("Extraction Error:", e);
-            out.innerHTML = `❌ Error: ${e.message}. Try another file.[cite: 2]`;
+            document.getElementById('output-container').innerHTML = "❌ Error reading file.[cite: 2]";
         }
     }
 
-    async function runAI() {
-        if (!puter || !puter.ai) return;
-
-        lastAction = 'generate';
+    async function runAI(mode) {
         const out = document.getElementById('output-container');
-        const qType = document.getElementById('qType').value;
-        const qCount = document.getElementById('qCount').value;
-        const mode = document.getElementById('displayMode').value;
-        out.innerHTML = `<span style="color:#3498db; font-weight:bold;">${uiText[currentUILang].processing}</span>`;
-
-        // FIX: Truncate context to prevent AI timeout[cite: 2]
-        const contextText = lastExtractedText.substring(0, 7000); 
-        const prompt = `Act as a teacher. Based on this text: "${contextText}", generate ${qCount} ${qType} questions. 
-        Language: ${currentUILang === 'en' ? 'English' : 'Bahasa Malaysia'}. 
-        Format: List all questions first. After all questions are listed, add the exact tag ---ANSWERS-START--- followed by the answer key.[cite: 2]`;
+        out.innerHTML = "✨ Generating...[cite: 2]";
+        
+        const prompt = `Use this text: "${lastExtractedText.substring(0, 6000)}" to create ${document.getElementById('qCount').value} ${document.getElementById('qType').value} questions. End with ---ANSWERS-START--- and the key.[cite: 2]`;
 
         try {
-            const res = await puter.ai.chat(prompt, { model: 'google/gemini-2.0-flash' });
-            const responseText = res.message.content;
+            const res = await puter.ai.chat(prompt);
+            const parts = res.message.content.split("---ANSWERS-START---");
             
-            let htmlContent = "";
-            if (responseText.includes("---ANSWERS-START---")) {
-                const parts = responseText.split("---ANSWERS-START---");
-                const header = mode === 'student' ? '📝 Practice Quiz' : '🧑‍🏫 Teacher Material';
-                
-                htmlContent = `<h3>${header}</h3><div>${parts[0]}</div>`;
-                if (mode === 'student') {
-                    htmlContent += `<details class="answer-box"><summary>Click to reveal answers</summary><div>${parts[1]}</div></details>`;
-                } else {
-                    htmlContent += `<div class="answer-box"><strong>Answer Key:</strong><br>${parts[1]}</div>`;
-                }
+            if (mode === 'student') {
+                out.innerHTML = `<h3>Quiz</h3>${parts[0]}<details><summary>Show Answers</summary>${parts[1]}</details>`;
             } else {
-                htmlContent = `<h3>Content</h3><div>${responseText}</div>`;
+                out.innerHTML = `<h3>Teacher Key</h3>${parts[0]}<hr>${parts[1]}`;
             }
-            
-            out.innerHTML = htmlContent;
-            document.getElementById('btn-regen').style.display = "inline-block";
-        } catch (e) { 
-            out.innerHTML = "❌ AI Error. Please try again.[cite: 2]"; 
-        }
+        } catch (e) { out.innerHTML = "❌ AI Error.[cite: 2]"; }
     }
 
     async function translateToBM() {
-        if (!lastExtractedText || !puter.ai) {
-            alert("Please upload a file first![cite: 2]");
-            return;
-        }
-
-        lastAction = 'translate';
         const out = document.getElementById('output-container');
-        out.innerHTML = `<span style="color:#e74c3c; font-weight:bold;">🌐 Translating content...[cite: 2]</span>`;
+        out.innerHTML = "🌐 Translating...[cite: 2]";
         
+        // Use chunking for stability[cite: 4]
+        const textToProcess = lastExtractedText.substring(0, 4000);
+        const prompt = `Translate this to formal Bahasa Malaysia, keeping technical terms in brackets: "${textToProcess}"[cite: 4]`;
+
         try {
-            const textToTranslate = lastExtractedText.substring(0, 5000); 
-            const prompt = `Translate the following educational content into formal Bahasa Malaysia. 
-            Keep technical terms in English inside brackets, e.g., "Motherboard [Papan Induk]". 
-            Content: "${textToTranslate}"`;
-
-            const res = await puter.ai.chat(prompt, { model: 'google/gemini-2.0-flash' });
-            
-            if (res && res.message && res.message.content) {
-                out.innerHTML = `<h3>🌐 Terjemahan Nota</h3><div>${res.message.content}</div>`;
-                document.getElementById('btn-regen').style.display = "inline-block";
-            } else {
-                throw new Error("Invalid AI response[cite: 2]");
-            }
-        } catch (e) { 
-            console.error("Translation Error:", e);
-            out.innerHTML = "❌ Translation Error. Document might be too large or complex.[cite: 2]"; 
-        }
+            const res = await puter.ai.chat(prompt);
+            out.innerHTML = `<h3>Terjemahan</h3>${res.message.content}`;
+        } catch (e) { out.innerHTML = "❌ Translation Error.[cite: 2]"; }
     }
 
-    function handleRegen() { lastAction === 'translate' ? translateToBM() : runAI(); }
-
-    function toggleGame() {
-        if(!lastExtractedText) { alert("Upload a file first![cite: 2]"); return; }
-        gameActive = !gameActive;
-        document.getElementById('game-content').style.display = gameActive ? "block" : "none";
-        document.getElementById('start-game-btn').innerText = gameActive ? "Stop Game" : "Start Word Scramble";
-        if(gameActive) refreshGame();
+    function toggleUILanguage() {
+        currentUILang = currentUILang === 'en' ? 'ms' : 'en';
+        document.getElementById('uiLangBtn').innerText = currentUILang === 'en' ? "Bahasa Malaysia" : "English";
+        // Additional UI toggles can be added here[cite: 4]
     }
-
-    function refreshGame() {
-        document.getElementById('game-feedback').innerText = "";
-        const words = lastExtractedText.split(/\s+/).filter(w => w.length > 7 && /^[A-Z]+$/i.test(w));
-        currentWord = (words.length > 0 ? words[Math.floor(Math.random()*words.length)] : "DEVELOPMENT").toUpperCase().replace(/[^A-Z]/g, '');
-        document.getElementById('scrambled-display').innerText = currentWord.split('').sort(() => Math.random() - 0.5).join('');
-        document.getElementById('game-input').value = "";
-    }
-
-    function checkScramble() {
-        if (document.getElementById('game-input').value.toUpperCase() === currentWord) {
-            winStreak++; document.getElementById('streak-count').innerText = winStreak;
-            document.getElementById('game-feedback').innerText = "✅ Correct![cite: 2]";
-            setTimeout(refreshGame, 1000);
-        } else {
-            winStreak = 0; document.getElementById('streak-count').innerText = "0";
-            document.getElementById('game-feedback').innerText = "❌ Try again![cite: 2]";
-        }
-    }
-
-    function showHint() { document.getElementById('hint-text').innerText = `Starts with "${currentWord[0]}" and ends with "${currentWord[currentWord.length - 1]}"`; }
-    function giveUp() { document.getElementById('game-feedback').innerText = `Answer: ${currentWord}[cite: 2]`; setTimeout(refreshGame, 2000); }
 </script>
 </body>
 </html>
