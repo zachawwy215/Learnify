@@ -141,7 +141,7 @@
             </div>
             
             <div style="display: flex; justify-content: center; gap: 5px;">
-                <!-- Combined Button[cite: 5] -->
+                <!-- Combined Button -->
                 <button id="btn-generate" class="btn" style="background:#3498db; color:white;" onclick="runAI()">✨ Generate Questions</button>
                 <button id="btn-translate" class="btn" style="background:#e74c3c; color:white;" onclick="translateToBM()">🌐 Translate to BM</button>
                 <button id="btn-regen" class="btn" style="background:#f39c12; color:white; display:none;" onclick="handleRegen()">🔄 Regenerate</button>
@@ -222,7 +222,7 @@
         document.getElementById('setup-section').style.display = "block";
         document.getElementById('start-game-btn').classList.add('enabled');
         const out = document.getElementById('output-container');
-        out.innerHTML = "Reading file...[cite: 4]";
+        out.innerHTML = "Reading file...";
 
         try {
             if (file.type === "application/pdf") {
@@ -236,9 +236,9 @@
             } else {
                 lastExtractedText = await puter.ai.img2txt(file);
             }
-            out.innerHTML = "✅ Ready! Adjust settings and click Generate.[cite: 4]";
+            out.innerHTML = "✅ Ready! Adjust settings and click Generate.";
         } catch (e) {
-            out.innerHTML = "❌ Error reading file.[cite: 4]";
+            out.innerHTML = "❌ Error reading file.";
         }
     }
 
@@ -247,7 +247,7 @@
         const out = document.getElementById('output-container');
         const qType = document.getElementById('qType').value;
         const qCount = document.getElementById('qCount').value;
-        const mode = document.getElementById('displayMode').value; // Get selected mode[cite: 5]
+        const mode = document.getElementById('displayMode').value; // Get selected mode
         out.innerHTML = `<span style="color:#3498db; font-weight:bold;">${uiText[currentUILang].processing}</span>`;
 
         const prompt = `
@@ -271,7 +271,7 @@
                 out.innerHTML = `<h3>🧑‍🏫 Teacher Material</h3><div>${qContent}</div><div class="answer-box"><strong>Answer Key:</strong><br>${aContent}</div>`;
             }
             document.getElementById('btn-regen').style.display = "inline-block";
-        } catch (e) { out.innerHTML = "❌ AI Error.[cite: 4]"; }
+        } catch (e) { out.innerHTML = "❌ AI Error."; }
     }
 
     // Restored Chunked Translation from Backup[cite: 4]
@@ -279,7 +279,7 @@
         if (!lastExtractedText) return;
         lastAction = 'translate';
         const out = document.getElementById('output-container');
-        out.innerHTML = `<span style="color:#e74c3c; font-weight:bold;">🌐 Translating...[cite: 4]</span><br><div id="t-prog" style="font-size:0.8rem; margin-top:5px;"></div>`;
+        out.innerHTML = `<span style="color:#e74c3c; font-weight:bold;">🌐 Translating...</span><br><div id="t-prog" style="font-size:0.8rem; margin-top:5px;"></div>`;
         
         const prog = document.getElementById('t-prog');
         const chunkSize = 3000;
@@ -296,13 +296,13 @@
             }
             out.innerHTML = `<h3>🌐 Terjemahan Nota</h3><div>${translated}</div>`;
             document.getElementById('btn-regen').style.display = "inline-block";
-        } catch (e) { out.innerHTML = "❌ Translation Error.[cite: 4]"; }
+        } catch (e) { out.innerHTML = "❌ Translation Error."; }
     }
 
     function handleRegen() { lastAction === 'translate' ? translateToBM() : runAI(); }
 
     function toggleGame() {
-        if(!lastExtractedText) { alert("Upload a file first![cite: 4]"); return; }
+        if(!lastExtractedText) { alert("Upload a file first!"); return; }
         gameActive = !gameActive;
         document.getElementById('game-content').style.display = gameActive ? "block" : "none";
         document.getElementById('start-game-btn').innerText = gameActive ? "Stop Game" : "Start Word Scramble";
