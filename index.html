@@ -89,11 +89,11 @@
     <div class="instruction-box">
         <h2 id="inst-title">Quick Guide</h2>
         <ul id="inst-list" style="list-style: none; padding: 0;">
-            <li>• 1. Upload: Select PDF/photo.</li>
-            <li>• 2. Setup: Choose type, amount, & mode.</li>
-            <li>• 3. Student Mode: Hides answers.</li>
-            <li>• 4. Teacher Mode: Shows answers.</li>
-            <li>• 5. Translate: Rewrite to BM.</li>
+            <li>• 1. Upload: Select PDF/photo.[cite: 2]</li>
+            <li>• 2. Setup: Choose type, amount, & mode.[cite: 2]</li>
+            <li>• 3. Student Mode: Hides answers.[cite: 2]</li>
+            <li>• 4. Teacher Mode: Shows answers.[cite: 2]</li>
+            <li>• 5. Translate: Rewrite to BM.[cite: 2]</li>
         </ul>
     </div>
 
@@ -108,7 +108,7 @@
     </div>
 
     <div id="disclaimer-text" class="disclaimer-bar">
-        Disclaimer: AI may occasionally provide incorrect information. Please cross-reference with your original source.
+        Disclaimer: AI may occasionally provide incorrect information. Please cross-reference with your original source.[cite: 2]
     </div>
 
     <div class="app-container">
@@ -145,7 +145,7 @@
             </div>
         </div>
 
-        <div id="output-container">Waiting for document upload...</div>
+        <div id="output-container">Waiting for document upload...[cite: 2]</div>
 
         <div id="game-section">
             <div style="font-weight:bold; color:#d35400; margin-bottom:10px;">🧩 Terminology Scramble | Streak: <span id="streak-count">0</span></div>
@@ -171,7 +171,6 @@
 </div>
 
 <script>
-    // Config for Puter stability
     puter.js.config({ transport: ['polling', 'websocket'] });
 
     const pdfjsLib = window['pdfjs-dist/build/pdf'];
@@ -224,7 +223,7 @@
 
         document.getElementById('file-label').innerText = "📄 " + file.name;
         const out = document.getElementById('output-container');
-        out.innerHTML = "Reading file... please wait.";
+        out.innerHTML = "Reading file... please wait.[cite: 2]";
 
         try {
             if (file.type === "application/pdf") {
@@ -246,16 +245,16 @@
             }
 
             if (!lastExtractedText || lastExtractedText.trim().length === 0) {
-                throw new Error("No readable text found.");
+                throw new Error("No readable text found.[cite: 2]");
             }
 
             document.getElementById('setup-section').style.display = "block";
             document.getElementById('start-game-btn').classList.add('enabled');
-            out.innerHTML = "✅ Ready! Adjust settings and click Generate.";
+            out.innerHTML = "✅ Ready! Adjust settings and click Generate.[cite: 2]";
             
         } catch (e) {
             console.error("Extraction Error:", e);
-            out.innerHTML = `❌ Error: ${e.message}. Try another file.`;
+            out.innerHTML = `❌ Error: ${e.message}. Try another file.[cite: 2]`;
         }
     }
 
@@ -269,11 +268,10 @@
         const mode = document.getElementById('displayMode').value;
         out.innerHTML = `<span style="color:#3498db; font-weight:bold;">${uiText[currentUILang].processing}</span>`;
 
-        // Truncate to avoid payload issues
         const contextText = lastExtractedText.substring(0, 7000);
         const prompt = `Act as a teacher. Based on this text: "${contextText}", generate ${qCount} ${qType} questions. 
         Language: ${currentUILang === 'en' ? 'English' : 'Bahasa Malaysia'}. 
-        Format: List all questions first. After all questions are listed, add the exact tag ---ANSWERS-START--- followed by the answer key.`;
+        Format: List all questions first. After all questions are listed, add the exact tag ---ANSWERS-START--- followed by the answer key.[cite: 2]`;
 
         try {
             const res = await puter.ai.chat(prompt, { model: 'google/gemini-2.0-flash' });
@@ -297,31 +295,44 @@
             out.innerHTML = htmlContent;
             document.getElementById('btn-regen').style.display = "inline-block";
         } catch (e) { 
-            out.innerHTML = "❌ AI Error. Please try again."; 
+            out.innerHTML = "❌ AI Error. Please try again.[cite: 2]"; 
         }
     }
 
     async function translateToBM() {
-        if (!lastExtractedText || !puter.ai) return;
+        if (!lastExtractedText || !puter.ai) {
+            alert("Please upload a file first![cite: 2]");
+            return;
+        }
 
         lastAction = 'translate';
         const out = document.getElementById('output-container');
-        out.innerHTML = `<span style="color:#e74c3c; font-weight:bold;">🌐 Translating...</span>`;
+        out.innerHTML = `<span style="color:#e74c3c; font-weight:bold;">🌐 Translating content...[cite: 2]</span>`;
         
         try {
-            const prompt = `Translate this content into formal Bahasa Malaysia, keeping technical terms in brackets where necessary: "${lastExtractedText.substring(0, 4000)}"`;
+            const textToTranslate = lastExtractedText.substring(0, 5000); // Optimized length
+            const prompt = `Translate the following educational content into formal Bahasa Malaysia. 
+            Keep technical terms in English inside brackets, e.g., "Motherboard [Papan Induk]". 
+            Content: "${textToTranslate}"`;
+
             const res = await puter.ai.chat(prompt, { model: 'google/gemini-2.0-flash' });
-            out.innerHTML = `<h3>🌐 Terjemahan Nota</h3><div>${res.message.content}</div>`;
-            document.getElementById('btn-regen').style.display = "inline-block";
+            
+            if (res && res.message && res.message.content) {
+                out.innerHTML = `<h3>🌐 Terjemahan Nota</h3><div>${res.message.content}</div>`;
+                document.getElementById('btn-regen').style.display = "inline-block";
+            } else {
+                throw new Error("Invalid AI response[cite: 2]");
+            }
         } catch (e) { 
-            out.innerHTML = "❌ Translation Error."; 
+            console.error("Translation Error:", e);
+            out.innerHTML = "❌ Translation Error. Document might be too large or complex.[cite: 2]"; 
         }
     }
 
     function handleRegen() { lastAction === 'translate' ? translateToBM() : runAI(); }
 
     function toggleGame() {
-        if(!lastExtractedText) { alert("Upload a file first!"); return; }
+        if(!lastExtractedText) { alert("Upload a file first![cite: 2]"); return; }
         gameActive = !gameActive;
         document.getElementById('game-content').style.display = gameActive ? "block" : "none";
         document.getElementById('start-game-btn').innerText = gameActive ? "Stop Game" : "Start Word Scramble";
@@ -339,16 +350,16 @@
     function checkScramble() {
         if (document.getElementById('game-input').value.toUpperCase() === currentWord) {
             winStreak++; document.getElementById('streak-count').innerText = winStreak;
-            document.getElementById('game-feedback').innerText = "✅ Correct!";
+            document.getElementById('game-feedback').innerText = "✅ Correct![cite: 2]";
             setTimeout(refreshGame, 1000);
         } else {
             winStreak = 0; document.getElementById('streak-count').innerText = "0";
-            document.getElementById('game-feedback').innerText = "❌ Try again!";
+            document.getElementById('game-feedback').innerText = "❌ Try again![cite: 2]";
         }
     }
 
     function showHint() { document.getElementById('hint-text').innerText = `Starts with "${currentWord[0]}" and ends with "${currentWord[currentWord.length - 1]}"`; }
-    function giveUp() { document.getElementById('game-feedback').innerText = `Answer: ${currentWord}`; setTimeout(refreshGame, 2000); }
+    function giveUp() { document.getElementById('game-feedback').innerText = `Answer: ${currentWord}[cite: 2]`; setTimeout(refreshGame, 2000); }
 </script>
 </body>
 </html>
