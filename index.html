@@ -148,7 +148,7 @@
             </div>
         </div>
 
-        <div id="output-container">Waiting for document upload...[cite: 4]</div>
+        <div id="output-container">Waiting for document upload...</div>
 
         <div id="game-section">
             <div style="font-weight:bold; color:#d35400; margin-bottom:10px;">🧩 Terminology Scramble | Streak: <span id="streak-count">0</span></div>
@@ -320,11 +320,11 @@
     function checkScramble() {
         if (document.getElementById('game-input').value.toUpperCase() === currentWord) {
             winStreak++; document.getElementById('streak-count').innerText = winStreak;
-            document.getElementById('game-feedback').innerText = "✅ Correct![cite: 4]";
+            document.getElementById('game-feedback').innerText = "✅ Correct!";
             setTimeout(refreshGame, 1000);
         } else {
             winStreak = 0; document.getElementById('streak-count').innerText = "0";
-            document.getElementById('game-feedback').innerText = "❌ Try again![cite: 4]";
+            document.getElementById('game-feedback').innerText = "❌ Try again!";
         }
     }
 
